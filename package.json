@@ -11,6 +11,7 @@
     "tauri-dev": "tauri dev"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "latest",
     "@vitejs/plugin-vue": "latest",
     "vite": "latest"
   }

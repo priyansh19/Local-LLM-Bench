@@ -49,12 +49,10 @@ foreach ($check in $checks) {
 
 # Step 2: Install dependencies
 Write-Host "`n[2/5] Installing dependencies..." -ForegroundColor Yellow
-if (!(Test-Path "$ProjectRoot/node_modules")) {
-    npm install
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "  ❌ npm install failed" -ForegroundColor Red
-        exit 1
-    }
+npm install
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "  ❌ npm install failed" -ForegroundColor Red
+    exit 1
 }
 Write-Host "  ✅ Dependencies installed" -ForegroundColor Green
 
@@ -64,10 +62,10 @@ Write-Host "  (This may take 3-5 minutes on first build)" -ForegroundColor Gray
 
 if ($Dev) {
     Write-Host "  Building in development mode..." -ForegroundColor Gray
-    npm run tauri-dev
+    npx tauri dev
 } else {
     Write-Host "  Building in release mode..." -ForegroundColor Gray
-    npm run tauri-build
+    npx tauri build
 
     if ($LASTEXITCODE -ne 0) {
         Write-Host "  ❌ Build failed" -ForegroundColor Red
