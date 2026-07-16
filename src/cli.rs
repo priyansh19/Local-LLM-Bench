@@ -35,9 +35,9 @@ pub struct Args {
 pub enum Commands {
     /// Run a benchmark on a local LLM model
     Run {
-        /// Path to the model file or directory
-        #[arg(value_name = "MODEL_PATH")]
-        model_path: PathBuf,
+        /// Model identifier (ollama:mistral, hf://modelid, or file path)
+        #[arg(value_name = "MODEL")]
+        model_path: String,
 
         /// Benchmark dataset to use
         #[arg(short, long, default_value = "standard")]
@@ -57,9 +57,9 @@ pub enum Commands {
 
     /// Show detailed information about a model
     Info {
-        /// Path to the model file or directory
-        #[arg(value_name = "MODEL_PATH")]
-        model_path: PathBuf,
+        /// Model identifier (ollama:mistral, hf://modelid, or file path)
+        #[arg(value_name = "MODEL")]
+        model_path: String,
     },
 
     /// Generate a report from benchmark results
@@ -74,7 +74,7 @@ pub enum Commands {
     },
 }
 
-pub fn run(args: Args) -> Result<()> {
+pub async fn run(args: Args) -> Result<()> {
     match args.command {
         Commands::Run {
             model_path,
@@ -85,14 +85,14 @@ pub fn run(args: Args) -> Result<()> {
             println!("Starting benchmark run...");
             println!(
                 "Model: {}, Dataset: {}, Iterations: {}",
-                model_path.display(),
+                model_path,
                 dataset,
                 iterations
             );
 
             let model = Model::load(&model_path)?;
             let mut benchmark = Benchmark::new(model);
-            let results = benchmark.run(&dataset, iterations)?;
+            let results = benchmark.run(&dataset, iterations).await?;
 
             if let Some(output_path) = output {
                 results.save(&output_path)?;

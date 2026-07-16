@@ -13,7 +13,7 @@ impl Benchmark {
         Self { model }
     }
 
-    pub fn run(&mut self, dataset: &str, iterations: usize) -> Result<Results> {
+    pub async fn run(&mut self, dataset: &str, iterations: usize) -> Result<Results> {
         println!("Running benchmark with {} iterations", iterations);
 
         let mut results = Results::new(
@@ -24,7 +24,7 @@ impl Benchmark {
 
         for i in 0..iterations {
             let start = Instant::now();
-            let _output = self.model.infer("Sample input text")?;
+            let _output = self.model.infer("Sample input text").await?;
             let duration = start.elapsed();
 
             let latency_ms = duration.as_secs_f64() * 1000.0;
