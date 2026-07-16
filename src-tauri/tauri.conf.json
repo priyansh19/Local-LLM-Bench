@@ -16,39 +16,11 @@
         "resizable": true,
         "fullscreen": false
       }
-    ],
-    "security": {
-      "csp": null
-    }
+    ]
   },
-  "tauri": {
-    "allowlist": {
-      "all": false,
-      "fs": {
-        "all": false,
-        "readDir": true,
-        "readFile": true,
-        "writeFile": true
-      },
-      "shell": {
-        "all": false,
-        "execute": true,
-        "open": true
-      }
-    },
-    "bundle": {
-      "active": true,
-      "targets": ["nsis"],
-      "icon": ["icons/icon.ico"],
-      "windows": {
-        "certificateThumbprint": null,
-        "digestAlgorithm": "sha256",
-        "signingIdentity": null,
-        "timestampUrl": ""
-      }
-    },
-    "security": {
-      "csp": null
-    }
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": ["icons/icon.ico"]
   }
 }
