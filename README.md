@@ -2,6 +2,11 @@
 
 A comprehensive benchmarking framework for evaluating and comparing local LLM models, written in Rust for maximum performance and cross-platform compatibility.
 
+**Available as:**
+- 🖥️ **Windows GUI App** (No Smart App Control warnings) - See [WINDOWS_APP.md](WINDOWS_APP.md)
+- 💻 **Cross-Platform CLI** (Linux, macOS, Windows)
+- 🐳 **Docker Container** (Works on any system)
+
 ## Features
 
 - ⚡ Fast, efficient benchmarking in Rust

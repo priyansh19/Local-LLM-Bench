@@ -1,0 +1,20 @@
+[package]
+name = "llm-bench"
+version = "0.2.0"
+description = "Benchmark local LLM models with a professional Windows app"
+authors = ["Priyansh <pgupta@zaradigitalsolutions.it>"]
+license = "MIT"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "1.5", features = [] }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+tauri = { version = "1.5", features = ["shell-open", "shell-execute"] }
+tokio = { version = "1.35", features = ["full"] }
+
+[features]
+default = [ "custom-protocol" ]
+custom-protocol = [ "tauri/custom-protocol" ]
