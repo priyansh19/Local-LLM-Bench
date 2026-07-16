@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LLM Bench - Benchmark Local LLM Models</title>
+    <title>LLM Bench VIZ - Professional Benchmarking Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -12,386 +13,648 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f0f14;
+            color: #e0e0e0;
             min-height: 100vh;
+            padding: 16px;
+            overflow-x: hidden;
+        }
+
+        .dashboard {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Top Bar */
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #d946ef 0%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .status-badge {
             display: flex;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #4caf50;
         }
 
-        .container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 900px;
-            width: 100%;
-            overflow: hidden;
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4caf50;
+            animation: pulse 2s infinite;
         }
 
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 40px 20px;
-            text-align: center;
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
+        /* Key Metrics Row */
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
         }
 
-        .header p {
-            opacity: 0.9;
-            font-size: 1.1em;
+        .metric-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
         }
 
-        .content {
-            padding: 40px;
+        .metric-card.leader {
+            border-left: 4px solid #d946ef;
         }
 
-        .section {
-            margin-bottom: 40px;
+        .metric-card.best {
+            border-left: 4px solid #ec4899;
         }
 
-        .section h2 {
-            font-size: 1.5em;
-            margin-bottom: 20px;
-            color: #333;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
+        .metric-card.fastest {
+            border-left: 4px solid #f59e0b;
         }
 
-        .form-group {
-            margin-bottom: 20px;
+        .metric-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin-bottom: 12px;
         }
 
-        label {
-            display: block;
+        .metric-value {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #d946ef 0%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 8px;
-            color: #555;
+        }
+
+        .metric-unit {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* Main Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        @media (max-width: 1200px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+        }
+
+        .panel-title {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #d946ef;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+
+        /* Analysis Section */
+        .analysis-text {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #999;
+            margin-top: 16px;
+        }
+
+        .analysis-text strong {
+            color: #e0e0e0;
+        }
+
+        /* Benchmark Cells Table */
+        .benchmark-table {
+            grid-column: 1 / -1;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        thead {
+            background: rgba(217, 70, 239, 0.1);
+        }
+
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #d946ef;
+            border-bottom: 2px solid rgba(217, 70, 239, 0.2);
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        tr:hover {
+            background: rgba(217, 70, 239, 0.05);
+        }
+
+        .model-name {
+            font-weight: 600;
+            color: #d946ef;
+        }
+
+        .metric-num {
+            color: #ec4899;
             font-weight: 600;
         }
 
+        /* Controls */
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
         select, input[type="number"] {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 6px;
-            font-size: 1em;
-            transition: border-color 0.3s;
+            color: #e0e0e0;
+            font-size: 13px;
         }
 
         select:focus, input[type="number"]:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #d946ef;
+            background: rgba(255, 255, 255, 0.08);
         }
 
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .buttons {
+        .button-group {
             display: flex;
-            gap: 10px;
-            margin-top: 30px;
+            gap: 8px;
         }
 
         button {
-            flex: 1;
-            padding: 14px 20px;
-            font-size: 1em;
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #d946ef 0%, #ec4899 100%);
+            color: white;
             border: none;
             border-radius: 6px;
-            cursor: pointer;
             font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
             transition: all 0.3s;
+            flex: 1;
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .btn-primary:hover {
+        button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 8px 16px rgba(217, 70, 239, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
         }
 
         .btn-secondary {
-            background: #f0f0f0;
-            color: #333;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .btn-secondary:hover {
-            background: #e0e0e0;
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: none;
         }
 
-        .results {
-            background: #f9f9f9;
-            padding: 20px;
-            border-radius: 6px;
-            margin-top: 20px;
-            border-left: 4px solid #667eea;
-        }
-
-        .results h3 {
-            margin-bottom: 15px;
-            color: #333;
-        }
-
-        .metric {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #eee;
-        }
-
-        .metric:last-child {
-            border-bottom: none;
-        }
-
-        .metric-label {
-            color: #666;
-        }
-
-        .metric-value {
-            font-weight: 600;
-            color: #667eea;
-        }
-
+        /* Progress Bar */
         .progress-bar {
             width: 100%;
-            height: 8px;
-            background: #eee;
-            border-radius: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
             overflow: hidden;
-            margin: 15px 0;
+            margin-top: 16px;
         }
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(90deg, #d946ef 0%, #ec4899 100%);
             width: 0%;
             transition: width 0.3s;
         }
 
+        /* Status Messages */
         .status {
-            padding: 15px;
+            padding: 12px 16px;
             border-radius: 6px;
-            margin-top: 15px;
-            font-weight: 600;
+            font-size: 12px;
+            margin-top: 16px;
+            border: 1px solid;
         }
 
         .status.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            background: rgba(76, 175, 80, 0.1);
+            color: #4caf50;
+            border-color: rgba(76, 175, 80, 0.3);
         }
 
         .status.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            background: rgba(244, 67, 54, 0.1);
+            color: #f44336;
+            border-color: rgba(244, 67, 54, 0.3);
         }
 
         .status.info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
+            background: rgba(33, 150, 243, 0.1);
+            color: #2196f3;
+            border-color: rgba(33, 150, 243, 0.3);
         }
 
-        .export-options {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .export-options button {
-            flex: 1;
-        }
-
-        @media (max-width: 600px) {
-            .form-row {
+        /* Responsive */
+        @media (max-width: 768px) {
+            .metrics-row {
                 grid-template-columns: 1fr;
             }
 
-            .header h1 {
-                font-size: 1.8em;
+            .metric-value {
+                font-size: 24px;
             }
 
-            .buttons {
-                flex-direction: column;
+            .controls {
+                grid-template-columns: 1fr;
             }
-        }
-
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-            margin-right: 10px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🚀 LLM Bench</h1>
-            <p>Benchmark Local LLM Models with Professional Analysis</p>
+    <div class="dashboard">
+        <!-- Top Bar -->
+        <div class="topbar">
+            <div class="logo">LLM BENCH VIZ</div>
+            <div style="display: flex; gap: 12px; font-size: 12px;">
+                <span>benchmark</span>
+                <span style="color: #666;">·</span>
+                <span id="benchmarkStatus">1/1 active</span>
+                <span style="color: #666;">·</span>
+                <span id="elapsedTime">0s elapsed</span>
+            </div>
+            <div class="status-badge">
+                <div class="status-dot"></div>
+                <span>LIVE - SINGLE</span>
+            </div>
         </div>
 
-        <div class="content">
-            <!-- Model Selection -->
-            <div class="section">
-                <h2>📊 Benchmark Configuration</h2>
-
-                <div class="form-group">
-                    <label for="model">Select Model</label>
-                    <select id="model">
-                        <option value="ollama:mistral">Ollama: Mistral</option>
-                        <option value="ollama:neural-chat">Ollama: Neural Chat</option>
-                        <option value="ollama:orca">Ollama: Orca</option>
-                        <option value="lmstudio:model">LM Studio: Model</option>
-                        <option value="llama-cpp:model">llama.cpp: Model</option>
-                    </select>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="iterations">Iterations</label>
-                        <input type="number" id="iterations" value="5" min="1" max="100">
-                    </div>
-                    <div class="form-group">
-                        <label for="dataset">Dataset</label>
-                        <select id="dataset">
-                            <option value="standard">Standard</option>
-                            <option value="llama-eval">LLaMA Eval</option>
-                            <option value="custom">Custom</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="buttons">
-                    <button class="btn-primary" onclick="runBenchmark()">
-                        ▶️ Start Benchmark
-                    </button>
-                    <button class="btn-secondary" onclick="clearResults()">
-                        🔄 Clear
-                    </button>
-                </div>
+        <!-- Key Metrics -->
+        <div class="metrics-row">
+            <div class="metric-card leader">
+                <div class="metric-label">⭐ Leader Now</div>
+                <div class="metric-value">Qwen3.5-27B</div>
+                <div class="metric-unit">25.4 tok/s</div>
             </div>
-
-            <!-- Progress -->
-            <div class="section" id="progressSection" style="display: none;">
-                <h2>⏳ Progress</h2>
-                <p id="progressText">Starting benchmark...</p>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
+            <div class="metric-card best">
+                <div class="metric-label">📊 Best Avg</div>
+                <div class="metric-value">Qwen3.5-27B</div>
+                <div class="metric-unit">26.7 tok/s</div>
             </div>
-
-            <!-- Results -->
-            <div class="section" id="resultsSection" style="display: none;">
-                <h2>📈 Results</h2>
-                <div class="results">
-                    <h3>Benchmark Metrics</h3>
-                    <div class="metric">
-                        <span class="metric-label">Average Latency</span>
-                        <span class="metric-value" id="avgLatency">-</span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">Min Latency</span>
-                        <span class="metric-value" id="minLatency">-</span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">Max Latency</span>
-                        <span class="metric-value" id="maxLatency">-</span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">Tokens/Second</span>
-                        <span class="metric-value" id="tokensPerSec">-</span>
-                    </div>
-                </div>
-
-                <div class="export-options">
-                    <button class="btn-secondary" onclick="exportResults('json')">
-                        💾 JSON
-                    </button>
-                    <button class="btn-secondary" onclick="exportResults('csv')">
-                        📋 CSV
-                    </button>
-                    <button class="btn-secondary" onclick="exportResults('html')">
-                        🌐 HTML
-                    </button>
-                </div>
+            <div class="metric-card fastest">
+                <div class="metric-label">⚡ Fastest TTFT</div>
+                <div class="metric-value">Qwen3.5-27B</div>
+                <div class="metric-unit">0.26 s</div>
             </div>
-
-            <!-- Status -->
-            <div id="statusDiv"></div>
         </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <select id="modelSelect">
+                <option value="ollama:mistral">Ollama: Mistral</option>
+                <option value="ollama:neural-chat">Ollama: Neural Chat</option>
+                <option value="ollama:qwen" selected>Ollama: Qwen 3.5 27B</option>
+                <option value="lmstudio:model">LM Studio: Model</option>
+                <option value="llama-cpp:model">llama.cpp: Model</option>
+            </select>
+            <input type="number" id="iterations" value="5" min="1" max="100" placeholder="Iterations">
+            <select id="dataset">
+                <option value="standard">Standard Dataset</option>
+                <option value="extended">Extended Dataset</option>
+                <option value="coding">Coding Tasks</option>
+            </select>
+            <div class="button-group">
+                <button onclick="runBenchmark()">▶ Start Benchmark</button>
+                <button class="btn-secondary" onclick="clearResults()">⟲ Clear</button>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="content-grid">
+            <!-- Performance Graph -->
+            <div class="panel" style="grid-column: 1 / -1;">
+                <div class="panel-title">📈 Live Performance (tok/s)</div>
+                <div class="chart-container">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+                <div id="progressSection" style="display: none;">
+                    <div style="margin-bottom: 12px; font-size: 13px; color: #999;">
+                        Progress: <span id="progressPercent">0</span>%
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Run Stats -->
+            <div class="panel">
+                <div class="panel-title">📌 Current Run</div>
+                <div style="font-size: 24px; font-weight: 700; color: #d946ef; margin-bottom: 8px;">25.4</div>
+                <div style="color: #666; font-size: 13px; margin-bottom: 20px;">tok/s</div>
+
+                <div style="display: grid; gap: 12px; font-size: 12px;">
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <span class="metric-label">AVG</span>
+                        <span class="metric-num">26.7 tok/s</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <span class="metric-label">TTFT</span>
+                        <span class="metric-num">0.26 s</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+                        <span class="metric-label">GEN</span>
+                        <span class="metric-num">1966 tok/s</span>
+                    </div>
+                </div>
+
+                <div class="analysis-text">
+                    <strong>Analysis:</strong> The text is a first-person narrative involving Thinking Process.
+                </div>
+            </div>
+
+            <!-- System Metrics -->
+            <div class="panel">
+                <div class="panel-title">⚙️ System Status</div>
+
+                <div style="display: grid; gap: 16px;">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px;">
+                            <span class="metric-label">CPU Usage</span>
+                            <span class="metric-num">45%</span>
+                        </div>
+                        <div class="progress-bar" style="height: 6px;">
+                            <div class="progress-fill" style="width: 45%;"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px;">
+                            <span class="metric-label">GPU Usage</span>
+                            <span class="metric-num">78%</span>
+                        </div>
+                        <div class="progress-bar" style="height: 6px;">
+                            <div class="progress-fill" style="width: 78%;"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px;">
+                            <span class="metric-label">Memory</span>
+                            <span class="metric-num">12.5 GB / 16 GB</span>
+                        </div>
+                        <div class="progress-bar" style="height: 6px;">
+                            <div class="progress-fill" style="width: 78%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analysis-text" style="margin-top: 20px;">
+                    <strong>Note:</strong> Peak GPU reached during token generation phase.
+                </div>
+            </div>
+        </div>
+
+        <!-- Benchmark Cells Table -->
+        <div class="panel benchmark-table">
+            <div class="panel-title">🧪 Benchmark Cells</div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>PP</th>
+                            <th>TG</th>
+                            <th>Depth</th>
+                            <th>Conc</th>
+                            <th>PP Tok/s</th>
+                            <th>TG Tok/s</th>
+                            <th>Peak TG</th>
+                            <th>TTFT MS</th>
+                            <th>Est TTFT MS</th>
+                            <th>Est TG TTFT MS</th>
+                            <th>Runs</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="radio" checked> <span class="model-name">Qwen3.5-27B</span></td>
+                            <td class="metric-num">512</td>
+                            <td class="metric-num">128</td>
+                            <td>0</td>
+                            <td>1</td>
+                            <td class="metric-num">1789.8</td>
+                            <td class="metric-num">26.4</td>
+                            <td class="metric-num">27.0</td>
+                            <td class="metric-num">273</td>
+                            <td class="metric-num">273</td>
+                            <td class="metric-num">273</td>
+                            <td>1/1</td>
+                        </tr>
+                        <tr>
+                            <td><input type="radio"> <span class="model-name">Qwen3.5-27B</span></td>
+                            <td class="metric-num">512</td>
+                            <td class="metric-num">256</td>
+                            <td>0</td>
+                            <td>1</td>
+                            <td>—</td>
+                            <td>—</td>
+                            <td>—</td>
+                            <td>—</td>
+                            <td>—</td>
+                            <td>—</td>
+                            <td>0/1</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Status Message -->
+        <div id="statusDiv"></div>
     </div>
 
     <script>
-        async function runBenchmark() {
-            const model = document.getElementById('model').value;
-            const iterations = document.getElementById('iterations').value;
+        let performanceChart;
+        let performanceData = [];
+        let elapsedSeconds = 0;
 
-            // Show progress
+        // Initialize chart
+        function initChart() {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            performanceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Throughput (tok/s)',
+                        data: [],
+                        borderColor: '#d946ef',
+                        backgroundColor: 'rgba(217, 70, 239, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#ec4899',
+                        pointBorderColor: '#d946ef',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 30,
+                            ticks: {
+                                color: '#666',
+                                font: { size: 11 }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#666',
+                                font: { size: 11 }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function runBenchmark() {
+            performanceData = [];
+            elapsedSeconds = 0;
             document.getElementById('progressSection').style.display = 'block';
             document.getElementById('statusDiv').innerHTML = '';
 
-            try {
-                // Simulate benchmark (in production, would call Tauri backend)
-                for (let i = 0; i <= 100; i += 20) {
-                    document.getElementById('progressFill').style.width = i + '%';
-                    document.getElementById('progressText').textContent =
-                        `Running benchmark: ${i}%`;
-                    await new Promise(r => setTimeout(r, 300));
-                }
+            // Simulate benchmark run
+            for (let i = 0; i <= 100; i += 10) {
+                // Add random performance data
+                const throughput = 20 + Math.random() * 10;
+                performanceData.push(throughput);
 
-                // Simulate results
-                document.getElementById('resultsSection').style.display = 'block';
-                document.getElementById('avgLatency').textContent = '1,245.67 ms';
-                document.getElementById('minLatency').textContent = '1,100.00 ms';
-                document.getElementById('maxLatency').textContent = '1,500.00 ms';
-                document.getElementById('tokensPerSec').textContent = '50.5 tokens/s';
+                // Update chart
+                updateChart(i);
 
-                showStatus('Benchmark completed successfully!', 'success');
-            } catch (error) {
-                showStatus('Error: ' + error, 'error');
+                // Update progress
+                document.getElementById('progressFill').style.width = i + '%';
+                document.getElementById('progressPercent').textContent = i;
+
+                elapsedSeconds += 0.7;
+                document.getElementById('elapsedTime').textContent = Math.round(elapsedSeconds) + 's elapsed';
+
+                await new Promise(r => setTimeout(r, 700));
             }
+
+            showStatus('Benchmark completed successfully! 🎉', 'success');
+        }
+
+        function updateChart(progress) {
+            const timeLabel = (progress / 10).toFixed(1) + 's';
+            performanceChart.data.labels.push(timeLabel);
+            performanceChart.data.datasets[0].data.push(performanceData[performanceData.length - 1]);
+            performanceChart.update('none');
         }
 
         function clearResults() {
+            performanceData = [];
             document.getElementById('progressSection').style.display = 'none';
-            document.getElementById('resultsSection').style.display = 'none';
             document.getElementById('statusDiv').innerHTML = '';
-        }
-
-        async function exportResults(format) {
-            showStatus(`Exporting as ${format.toUpperCase()}...`, 'info');
-            // In production, would call Tauri backend
-            setTimeout(() => {
-                showStatus(`Results exported as ${format.toUpperCase()}!`, 'success');
-            }, 1000);
+            initChart();
         }
 
         function showStatus(message, type) {
             const statusDiv = document.getElementById('statusDiv');
             statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
         }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', initChart);
     </script>
 </body>
 </html>
