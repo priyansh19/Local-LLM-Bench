@@ -4,6 +4,10 @@ mod models;
 mod results;
 mod registry;
 mod inference;
+mod tokenizer;
+mod metrics;
+mod stats;
+mod datasets;
 
 use clap::Parser;
 use cli::Args;
