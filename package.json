@@ -1,18 +1,82 @@
 {
-  "name": "llm-bench-gui",
+  "name": "llm-bench",
   "version": "0.2.0",
-  "description": "Professional LLM Benchmarking Tool - Windows GUI Application",
-  "type": "module",
+  "description": "Professional LLM Benchmarking Tool - Windows Desktop App",
+  "main": "public/main.js",
+  "homepage": "./",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "tauri": "tauri",
-    "tauri-build": "tauri build",
-    "tauri-dev": "tauri dev"
+    "react-start": "react-scripts start",
+    "react-build": "react-scripts build",
+    "react-test": "react-scripts test",
+    "react-eject": "react-scripts eject",
+    "electron-start": "electron .",
+    "start": "concurrently \"npm run react-start\" \"wait-on http://localhost:3000 && npm run electron-start\"",
+    "build": "npm run react-build && electron-builder",
+    "build-windows": "npm run react-build && electron-builder --win --publish never",
+    "build-portable": "npm run react-build && electron-builder --win portable --publish never",
+    "dev": "npm start"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "latest",
-    "@vitejs/plugin-vue": "latest",
-    "vite": "latest"
+    "electron": "^latest",
+    "electron-builder": "^latest",
+    "concurrently": "^8.2.0",
+    "wait-on": "^7.0.1"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "build": {
+    "appId": "com.llmbench.app",
+    "productName": "LLM Bench",
+    "files": [
+      "public/**/*",
+      "build/**/*",
+      "node_modules/**/*"
+    ],
+    "directories": {
+      "buildResources": "public"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "certificateFile": null,
+      "certificatePassword": null,
+      "signingHashAlgorithms": [
+        "sha256"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "LLM Bench"
+    }
   }
 }
