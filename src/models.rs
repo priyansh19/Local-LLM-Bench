@@ -1,5 +1,6 @@
-use anyhow::{anyhow, Result};
 use std::path::Path;
+
+use crate::cli::{Result, AppError};
 
 #[derive(Clone)]
 pub struct Model {
@@ -14,7 +15,7 @@ impl Model {
         let path_str = path.to_string_lossy().to_string();
 
         if !path.exists() {
-            return Err(anyhow!("Model path does not exist: {}", path_str));
+            return Err(AppError(format!("Model path does not exist: {}", path_str)));
         }
 
         let name = path

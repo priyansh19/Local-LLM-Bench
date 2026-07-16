@@ -1,7 +1,8 @@
-use anyhow::{anyhow, Result};
 use chrono::Local;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
+
+use crate::cli::{Result, AppError};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Results {
@@ -50,22 +51,27 @@ impl Results {
     }
 
     pub fn save(&self, path: &Path) -> Result<()> {
-        let json = serde_json::to_string_pretty(self)?;
-        std::fs::write(path, json)?;
+        let json = serde_json::to_string_pretty(self)
+            .map_err(|e| AppError(format!("JSON serialization error: {}", e)))?;
+        std::fs::write(path, json)
+            .map_err(|e| AppError(format!("Failed to write file: {}", e)))?;
         Ok(())
     }
 
     pub fn load(path: &Path) -> Result<Self> {
-        let json = std::fs::read_to_string(path)?;
-        serde_json::from_str(&json).map_err(|e| anyhow!("Failed to parse results: {}", e))
+        let json = std::fs::read_to_string(path)
+            .map_err(|e| AppError(format!("Failed to read file: {}", e)))?;
+        serde_json::from_str(&json)
+            .map_err(|e| AppError(format!("Failed to parse results: {}", e)))
     }
 
     pub fn format(&self, format: &str) -> Result<String> {
         match format {
-            "json" => Ok(serde_json::to_string_pretty(self)?),
+            "json" => serde_json::to_string_pretty(self)
+                .map_err(|e| AppError(format!("JSON serialization error: {}", e))),
             "csv" => self.to_csv(),
             "html" => self.to_html(),
-            _ => Err(anyhow!("Unknown format: {}", format)),
+            _ => Err(AppError(format!("Unknown format: {}", format))),
         }
     }
 

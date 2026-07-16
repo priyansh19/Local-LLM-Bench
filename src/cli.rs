@@ -1,10 +1,22 @@
-use anyhow::Result;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
-use tracing::info;
+use std::fmt;
 
 use crate::benchmark::Benchmark;
 use crate::models::Model;
+
+#[derive(Debug)]
+pub struct AppError(String);
+
+impl fmt::Display for AppError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl std::error::Error for AppError {}
+
+pub type Result<T> = std::result::Result<T, AppError>;
 
 #[derive(Parser)]
 #[command(name = "llm-bench")]
@@ -62,7 +74,7 @@ pub enum Commands {
     },
 }
 
-pub async fn run(args: Args) -> Result<()> {
+pub fn run(args: Args) -> Result<()> {
     match args.command {
         Commands::Run {
             model_path,
@@ -70,8 +82,8 @@ pub async fn run(args: Args) -> Result<()> {
             iterations,
             output,
         } => {
-            info!("Starting benchmark run...");
-            info!(
+            println!("Starting benchmark run...");
+            println!(
                 "Model: {}, Dataset: {}, Iterations: {}",
                 model_path.display(),
                 dataset,
@@ -80,20 +92,21 @@ pub async fn run(args: Args) -> Result<()> {
 
             let model = Model::load(&model_path)?;
             let mut benchmark = Benchmark::new(model);
-            let results = benchmark.run(&dataset, iterations).await?;
+            let results = benchmark.run(&dataset, iterations)?;
 
             if let Some(output_path) = output {
                 results.save(&output_path)?;
-                info!("Results saved to: {}", output_path.display());
+                println!("Results saved to: {}", output_path.display());
             } else {
-                println!("{}", serde_json::to_string_pretty(&results)?);
+                println!("{}", serde_json::to_string_pretty(&results)
+                    .map_err(|e| AppError(format!("JSON serialization error: {}", e)))?);
             }
 
             Ok(())
         }
 
         Commands::ListDatasets => {
-            info!("Available benchmark datasets:");
+            println!("Available benchmark datasets:");
             println!("  - standard: Standard benchmark suite");
             println!("  - llama-eval: Llama evaluation dataset");
             println!("  - custom: Custom dataset path");
@@ -101,7 +114,7 @@ pub async fn run(args: Args) -> Result<()> {
         }
 
         Commands::Info { model_path } => {
-            info!("Loading model information...");
+            println!("Loading model information...");
             let model = Model::load(&model_path)?;
             println!("{}", model.info()?);
             Ok(())
@@ -111,7 +124,7 @@ pub async fn run(args: Args) -> Result<()> {
             results_file,
             format,
         } => {
-            info!("Generating report from: {}", results_file.display());
+            println!("Generating report from: {}", results_file.display());
             let results = crate::results::Results::load(&results_file)?;
             let report = results.format(&format)?;
             println!("{}", report);

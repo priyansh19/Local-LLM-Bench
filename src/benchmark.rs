@@ -1,7 +1,6 @@
-use anyhow::Result;
 use std::time::Instant;
-use tracing::info;
 
+use crate::cli::Result;
 use crate::models::Model;
 use crate::results::Results;
 
@@ -14,8 +13,8 @@ impl Benchmark {
         Self { model }
     }
 
-    pub async fn run(&mut self, dataset: &str, iterations: usize) -> Result<Results> {
-        info!("Running benchmark with {} iterations", iterations);
+    pub fn run(&mut self, dataset: &str, iterations: usize) -> Result<Results> {
+        println!("Running benchmark with {} iterations", iterations);
 
         let mut results = Results::new(
             self.model.name.clone(),
@@ -31,7 +30,7 @@ impl Benchmark {
             let latency_ms = duration.as_secs_f64() * 1000.0;
             results.add_latency(latency_ms);
 
-            info!("Iteration {}/{} completed in {:.2}ms", i + 1, iterations, latency_ms);
+            println!("Iteration {}/{} completed in {:.2}ms", i + 1, iterations, latency_ms);
         }
 
         Ok(results)
