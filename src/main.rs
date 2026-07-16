@@ -8,6 +8,8 @@ mod tokenizer;
 mod metrics;
 mod stats;
 mod datasets;
+mod animations;
+mod ui;
 
 use clap::Parser;
 use cli::Args;
