@@ -2,6 +2,7 @@
   "name": "llm-bench",
   "version": "0.2.0",
   "description": "Professional LLM Benchmarking Tool - Windows Desktop App",
+  "author": "LLMBench Team",
   "main": "public/main.js",
   "homepage": "./",
   "scripts": {
@@ -19,11 +20,12 @@
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1"
+    "react-scripts": "5.0.1",
+    "electron-is-dev": "^3.0.1"
   },
   "devDependencies": {
-    "electron": "^latest",
-    "electron-builder": "^latest",
+    "electron": "latest",
+    "electron-builder": "latest",
     "concurrently": "^8.2.0",
     "wait-on": "^7.0.1"
   },
@@ -43,32 +45,19 @@
     "appId": "com.llmbench.app",
     "productName": "LLM Bench",
     "files": [
-      "public/**/*",
       "build/**/*",
+      "public/main.js",
+      "public/preload.js",
       "node_modules/**/*"
     ],
     "directories": {
-      "buildResources": "public"
+      "buildResources": "public",
+      "output": "dist"
     },
     "win": {
       "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "portable",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "certificateFile": null,
-      "certificatePassword": null,
-      "signingHashAlgorithms": [
-        "sha256"
+        "nsis",
+        "portable"
       ]
     },
     "nsis": {

@@ -1,28 +1,45 @@
-# Rust
+# ---- Node / Electron / React ----
+node_modules/
+/build/
+/dist/
+/dist-electron/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp.*
+coverage/
+
+# ---- Rust (legacy CLI) ----
 /target/
-Cargo.lock
 **/*.rs.bk
 *.pdb
 
-# IDE
+# ---- Editors / OS ----
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 .DS_Store
-
-# OS
 Thumbs.db
-.DS_Store
 
-# Project specific
+# ---- Local tooling / agent state ----
+.claude/scheduled_tasks.lock
+.claude/**/*.lock
+.claude/projects/
+scratchpad/
+
+# ---- Model files & benchmark artifacts (never commit weights) ----
 *.model
 *.bin
 *.weights
+*.gguf
 results/
 benchmarks/results/
 data/models/
 
-# Logs
+# ---- Logs & env ----
 *.log
+.env
+.env.local
+.env.*.local
